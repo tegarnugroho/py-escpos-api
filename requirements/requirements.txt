@@ -1,4 +1,4 @@
 flask
 pybluez
-python-escpos
+PyESCPOS
 Pillow
