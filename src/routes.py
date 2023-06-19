@@ -4,7 +4,6 @@ from escpos import USBConnection
 
 
 from flask import Blueprint, jsonify, request
-from escpos import printer, exceptions as printer_exceptions, constants
 
 app_routes = Blueprint('printer', __name__)
 
@@ -12,7 +11,7 @@ app_routes = Blueprint('printer', __name__)
 # API route to print a receipt and kick the cash drawer
 @app_routes.route('printer/print-receipt', methods=['POST'])
 def print_receipt():
-    # Retrieve the receipt data from the request
+    # Retrieve the parameters from the request
     receipt_data = request.json.get('receipt_data')
     address = request.json.get('address')
     interface = request.json.get('interface')
@@ -29,6 +28,17 @@ def print_receipt():
         printer.text_center('\n***** das POS-Unternehmen *****\n\n')
         printer.text_center('Beleg-Nr. 10052/013/0001   31.08.2022 11:33:37\n')
         printer.text_center('Frau Tamara (Cashier) served you at Station 1\n')
+        
+        # Set the items sections
+        for index, item in enumerate(receipt_data['items'], start=1):
+            number = str(index)
+            name = item['name']
+            product_id = item['product_id']
+            quantity = item['quantity']
+            price = f"{item['price']:.2f}"
+            total = f"{item['price'] * item['quantity']:.2f}"
+            
+            printer.text(f"{number} {name}\n {product_id} {quantity} {price} {total}")
         
         # Set Footer of the receipt
         printer.text('\n')
@@ -47,7 +57,7 @@ def print_receipt():
             'status_code': 200
         }), 200
 
-    except printer_exceptions.Error as e:
+    except Exception as e:
         return jsonify({
             'message': f'Printing failed: {str(e)}',
             'status_code': 500,
@@ -55,7 +65,7 @@ def print_receipt():
 
 
 def connect_to_bluetooth_printer(address):
-    # uses SPD (service port discovery) services to find which port to connect to
+    # BluetoothConnection
     conn = BluetoothConnection.create(address)
     printer = GenericESCPOS(conn)
     
@@ -63,7 +73,7 @@ def connect_to_bluetooth_printer(address):
 
 
 def connect_to_printer(address):    
-    # uses SPD (service port discovery) services to find which port to connect to
+    # USBConnection
     conn = USBConnection.create('04b8:0e20,interface=0,ep_out=3,ep_in=0')
     printer = GenericESCPOS(conn)
     
@@ -72,16 +82,18 @@ def connect_to_printer(address):
 
 @app_routes.route('/printer/kick-cashdrawer', methods=['GET'])
 def kick_cash_drawer():
-    # Retrieve the bluetooth address from the request
+    # Retrieve the parameters from the request
     address = request.json.get('address')
     interface = request.json.get('interface')
-    # Send command to open the cash drawer (specific to your printer model)
-    # Replace the following line with the appropriate command for your printer
+    
     try:
         printer = connect_to_printer()
         if (interface == 'USB') : printer = connect_to_bluetooth_printer(address=address)
         
+        # Init the printer        
         printer.init()
+        
+        # Kick the cash drawer      
         printer.kick_drawer(port=2)
         return jsonify({
             'message': 'Cash drawer kicked successfully!',
