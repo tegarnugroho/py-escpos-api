@@ -1,4 +1,3 @@
-import bluetooth
 from escpos import BluetoothConnection
 from escpos.impl.epson import GenericESCPOS, CashDrawerException
 from escpos import USBConnection
