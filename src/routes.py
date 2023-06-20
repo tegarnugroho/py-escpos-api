@@ -42,7 +42,7 @@ def print_receipt():
         
         # Set Footer of the receipt
         printer.text('\n')
-        printer.ean13("123456")
+        printer.ean13("1234567891011")
         printer.text('\n\n\n***** Thank you for your purchase *****\n')
         printer.text('www.aks-anker.de/')
         
