@@ -61,12 +61,12 @@ def print_receipt():
                 printer.feature.columns.condensed,
                 alignments='><>^>>',
                 column_widths=[
-                    0.1,
-                    0.3,
-                    0.15,
                     0.05,
-                    0.15,
-                    0.15,
+                    0.3,
+                    0.1,
+                    0.05,
+                    0.2,
+                    0.2,
                 ]
             )
 
