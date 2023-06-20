@@ -71,10 +71,10 @@ def print_receipt():
             )
 
         data = (
-                ('ID', 'Product', 'Qty', '', 'Price', 'Total'),
-                ('1234', 'SAMPLE', '2', 'x', '0.25', '0.50'),
-                ('1235', 'OTHER SAMPLE', '1', 'x', '1.50', '1.50'),
-                ('1237', 'ANOTHER ONE', '3', 'x', '0.75', '2.25'),
+                ('No.', 'Product', 'Qty', '', 'Price', 'Total'),
+                ('1', 'SAMPLE', '2', 'x', '0.25', '0.50'),
+                ('2', 'OTHER SAMPLE', '1', 'x', '1.50', '1.50'),
+                ('3', 'ANOTHER ONE', '3', 'x', '0.75', '2.25'),
             )
 
         printer.set_condensed(True)
