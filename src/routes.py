@@ -13,10 +13,13 @@ app_routes = Blueprint('printer', __name__)
 def print_receipt():
     # Retrieve the parameters from the request
     receipt_data = request.json.get('receipt_data')
+    address = request.json.get('address')
+    interface = request.json.get('interface')
 
     try:
         # Connect to the printer    
         printer = connect_to_printer()
+        if (interface == 'USB') : printer = connect_to_bluetooth_printer(address=address)
         
         # Init the printer
         printer.init()
@@ -69,7 +72,7 @@ def connect_to_bluetooth_printer(address):
     return printer
 
 
-def connect_to_printer(address):    
+def connect_to_printer():    
     # USBConnection
     conn = USBConnection.create('04b8:0e20,interface=0,ep_out=3,ep_in=0')
     printer = GenericESCPOS(conn)
