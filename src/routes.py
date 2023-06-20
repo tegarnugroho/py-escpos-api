@@ -18,7 +18,7 @@ def print_receipt():
 
     try:
         # Connect to the printer    
-        printer = connect_to_printer()
+        printer = connect_to_bluetooth_printer(address=address)
         
         # Init the printer
         printer.init()
