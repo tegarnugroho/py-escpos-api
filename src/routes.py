@@ -44,10 +44,9 @@ def print_receipt():
         printer.text('\n')
         printer.ean13("1234567891011")
         printer.text('\n\n\n***** Thank you for your purchase *****\n')
-        printer.text('www.aks-anker.de/')
+        printer.text('www.aks-anker.de/')    
         
-        # Kick the cash drawer
-        printer.kick_drawer(port=0)        
+        printer.lf()
         
         # Cut the paper
         printer.cut()
