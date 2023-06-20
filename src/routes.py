@@ -1,11 +1,29 @@
+import math
+
+from datetime import datetime
 from escpos import BluetoothConnection
 from escpos.impl.epson import GenericESCPOS, CashDrawerException
-from escpos import USBConnection, showcase
-
-
+from escpos import USBConnection
 from flask import Blueprint, jsonify, request
 
 app_routes = Blueprint('printer', __name__)
+
+def _get_ruler(printer, char='-'):
+    return char * printer.feature.columns.normal
+
+def _build_item_mask(width, alignments=None, column_widths=None, gap=1):
+    # <alignments> str, for example "<>^" (left, right, center)
+    # <column_widths> list(float, ...)
+    if len(alignments) != len(column_widths):
+        raise ValueError('Alignment spec and number of columns must match')
+    if sum(column_widths) > 100:
+        raise ValueError('Sum of column widths must not be greater than 100%')
+    width = width - (len(alignments) * gap) - gap
+    columns = []
+    for i, perc in enumerate(column_widths):
+        col_len = int(math.ceil(perc * width))
+        columns.append('{{:{:s}{:d}s}}'.format(alignments[i], col_len))
+    return (' ' * gap).join(columns)
 
 
 # API route to print a receipt and kick the cash drawer
@@ -23,7 +41,52 @@ def print_receipt():
         else:
             printer = connect_to_bluetooth_printer(address=address)   
         
-        showcase.receipt_showcase(printer=printer) 
+        """A showcase of a fictional POS receipt."""
+        ruler_single = _get_ruler(printer)
+
+        printer.init()
+        printer.text('\n***** das POS-Unternehmen *****\n\n')
+        printer.text(ruler_single)
+        printer.set_expanded(True)
+        printer.justify_center()
+        printer.text('RECEIPT #5678')
+        printer.justify_left()
+        printer.set_expanded(False)
+        printer.text(ruler_single)
+
+        printer.text('{:%x %X} Session #{:d}'.format(datetime.now(), 42))
+
+        item_mask = _build_item_mask(
+                printer.feature.columns.condensed,
+                alignments='><>^>>',
+                column_widths=[
+                    0.1,
+                    0.4,
+                    0.15,
+                    0.05,
+                    0.15,
+                    0.15,
+                ]
+            )
+
+        data = (
+                ('ID', 'Product', 'Qty', '', 'Price', 'Total'),
+                ('1234', 'SAMPLE', '2', 'x', '0.25', '0.50'),
+                ('1235', 'OTHER SAMPLE', '1', 'x', '1.50', '1.50'),
+                ('1237', 'ANOTHER ONE', '3', 'x', '0.75', '2.25'),
+            )
+
+        printer.set_condensed(True)
+        for row in data:
+            printer.text(item_mask.format(*row))
+
+        printer.set_condensed(False)
+        printer.text(ruler_single)
+        printer.set_emphasized(True)
+        printer.text('TOTAL  4.25')
+        printer.set_emphasized(False)
+        printer.text(ruler_single)
+        printer.lf() 
         
         # # Init the printer
         # printer.init()
@@ -52,8 +115,8 @@ def print_receipt():
         
         # printer.kick_drawer(port=0)
         
-        # # Cut the paper
-        # printer.cut()
+        # Cut the paper
+        printer.cut()
 
         return jsonify({
             'message': 'Receipt printed and cash drawer kicked successfully!',
