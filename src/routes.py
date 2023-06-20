@@ -19,7 +19,6 @@ def print_receipt():
     try:
         # Connect to the printer    
         printer = connect_to_printer()
-        if (interface == 'USB') : printer = connect_to_bluetooth_printer(address=address)
         
         # Init the printer
         printer.init()
@@ -49,7 +48,7 @@ def print_receipt():
         printer.lf()
         
         # Cut the paper
-        printer.cut(partial=False)
+        printer.cut(feed=255)
 
         return jsonify({
             'message': 'Receipt printed and cash drawer kicked successfully!',
