@@ -1,6 +1,6 @@
 from escpos import BluetoothConnection
 from escpos.impl.epson import GenericESCPOS, CashDrawerException
-from escpos import USBConnection
+from escpos import USBConnection, showcase
 
 
 from flask import Blueprint, jsonify, request
@@ -21,37 +21,39 @@ def print_receipt():
         if (interface == 'USB'):
             printer = connect_to_printer()
         else:
-            printer = connect_to_bluetooth_printer(address=address)    
+            printer = connect_to_bluetooth_printer(address=address)   
         
-        # Init the printer
-        printer.init()
+        showcase.receipt_showcase(printer=printer) 
         
-        # Set Header of the receipt
-        printer.text_center('\n***** das POS-Unternehmen *****\n\n')
-        printer.text_center('Beleg-Nr. 10052/013/0001   31.08.2022 11:33:37\n')
-        printer.text_center('Frau Tamara (Cashier) served you at Station 1\n')
+        # # Init the printer
+        # printer.init()
         
-        # Set the items sections
-        for index, item in enumerate(receipt_data['items'], start=1):
-            number = str(index)
-            name = item['name']
-            product_id = item['product_id']
-            quantity = item['quantity']
-            price = f"{item['price']:.2f}"
-            total = f"{item['price'] * item['quantity']:.2f}"
+        # # Set Header of the receipt
+        # printer.text_center('\n***** das POS-Unternehmen *****\n\n')
+        # printer.text_center('Beleg-Nr. 10052/013/0001   31.08.2022 11:33:37\n')
+        # printer.text_center('Frau Tamara (Cashier) served you at Station 1\n')
+        
+        # # Set the items sections
+        # for index, item in enumerate(receipt_data['items'], start=1):
+        #     number = str(index)
+        #     name = item['name']
+        #     product_id = item['product_id']
+        #     quantity = item['quantity']
+        #     price = f"{item['price']:.2f}"
+        #     total = f"{item['price'] * item['quantity']:.2f}"
             
-            printer.text(f"{number} {name}\n {product_id} {quantity} {price} {total}")
+        #     printer.text(f"{number} {name}\n {product_id} {quantity} {price} {total}")
         
-        # Set Footer of the receipt
-        printer.text('\n')
-        printer.ean13("1234567891011")
-        printer.text('\n\n\n***** Thank you for your purchase *****\n')
-        printer.text('www.aks-anker.de/')    
+        # # Set Footer of the receipt
+        # printer.text('\n')
+        # printer.ean13("1234567891011")
+        # printer.text('\n\n\n***** Thank you for your purchase *****\n')
+        # printer.text('www.aks-anker.de/')    
         
-        printer.kick_drawer(port=0)
+        # printer.kick_drawer(port=0)
         
-        # Cut the paper
-        printer.cut()
+        # # Cut the paper
+        # printer.cut()
 
         return jsonify({
             'message': 'Receipt printed and cash drawer kicked successfully!',
@@ -75,7 +77,7 @@ def connect_to_bluetooth_printer(address):
 
 def connect_to_printer():    
     # USBConnection
-    conn = USBConnection.create('04b8:0e20,interface=0,ep_out=3,ep_in=0')
+    conn = USBConnection.create('04b8:0e20,ep_out=3,ep_in=0')
     printer = GenericESCPOS(conn)
     
     return printer
