@@ -45,7 +45,9 @@ def print_receipt():
         ruler_single = _get_ruler(printer)
 
         printer.init()
-        printer.text('\n***** das POS-Unternehmen *****\n\n')
+        printer.text('\n***** das POS-Unternehmen *****\n')
+        printer.text_center('Beleg-Nr. 10052/013/0001   31.08.2022 {:%x %X}\n'.format(datetime.now()))
+        printer.text_center('Frau Tamara (Cashier) served you at Station 1\n')
         printer.text(ruler_single)
         printer.set_expanded(True)
         printer.justify_center()
@@ -54,14 +56,13 @@ def print_receipt():
         printer.set_expanded(False)
         printer.text(ruler_single)
 
-        printer.text('{:%x %X} Session #{:d}'.format(datetime.now(), 42))
 
         item_mask = _build_item_mask(
                 printer.feature.columns.condensed,
                 alignments='><>^>>',
                 column_widths=[
                     0.1,
-                    0.4,
+                    0.3,
                     0.15,
                     0.05,
                     0.15,
