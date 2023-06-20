@@ -49,7 +49,7 @@ def print_receipt():
         printer.lf()
         
         # Cut the paper
-        printer.cut()
+        printer.cut(partial=False)
 
         return jsonify({
             'message': 'Receipt printed and cash drawer kicked successfully!',
