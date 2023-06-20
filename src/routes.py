@@ -50,7 +50,7 @@ def print_receipt():
         printer.cut()
         
         # Kick the cash drawer
-        printer.kick_drawer(port=2)
+        printer.kick_drawer(port=0)
 
         return jsonify({
             'message': 'Receipt printed and cash drawer kicked successfully!',
@@ -94,7 +94,7 @@ def kick_cash_drawer():
         printer.init()
         
         # Kick the cash drawer      
-        printer.kick_drawer(port=2)
+        printer.kick_drawer(port=0)
         return jsonify({
             'message': 'Cash drawer kicked successfully!',
             'status_code': 200
