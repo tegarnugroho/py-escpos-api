@@ -48,10 +48,10 @@ def print_receipt():
         printer.text('\n\n\n***** Thank you for your purchase *****\n')
         printer.text('www.aks-anker.de/')    
         
-        printer.lf()
+        printer.kick_drawer(port=0)
         
         # Cut the paper
-        printer.cut(feed=255)
+        printer.cut()
 
         return jsonify({
             'message': 'Receipt printed and cash drawer kicked successfully!',
