@@ -1,7 +1,7 @@
 import math
 
 from datetime import datetime
-from escpos import BluetoothConnection
+from escpos import BluetoothConnection, barcode
 from escpos.impl.epson import GenericESCPOS, CashDrawerException
 from escpos import USBConnection, showcase
 from flask import Blueprint, jsonify, request
@@ -99,11 +99,12 @@ def print_receipt():
         
         # Set Footer of the receipt
         printer.text('\n')
-        kwargs={
-            'barcode_height':100, 
-            'barcode_width':200
-            }
-        printer.ean13("1234567891011", **kwargs)
+        getattr(printer, 'ean13')(
+                '1234567891011',
+                barcode_hri= barcode.BARCODE_HRI_NONE,
+                barcode_height= 50,
+                barcode_width=barcode.BARCODE_NORMAL_WIDTH
+            )
         printer.text_center('\n\n\n***** Thank you for your purchase *****\n')
         printer.text_center('www.aks-anker.de/')  
         
