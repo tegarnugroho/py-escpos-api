@@ -3,7 +3,7 @@ import math
 from datetime import datetime
 from escpos import BluetoothConnection
 from escpos.impl.epson import GenericESCPOS, CashDrawerException
-from escpos import USBConnection
+from escpos import USBConnection, showcase
 from flask import Blueprint, jsonify, request
 
 app_routes = Blueprint('printer', __name__)
@@ -42,82 +42,83 @@ def print_receipt():
             printer = connect_to_bluetooth_printer(address=address)   
         
         """A showcase of a fictional POS receipt."""
-        ruler_single = _get_ruler(printer)
+        showcase.showcase(printer=printer)
+        # ruler_single = _get_ruler(printer)
 
-        printer.init()
-        printer.text('\n***** das POS-Unternehmen *****\n')
-        printer.text_center('Beleg-Nr. 10052/013/0001   31.08.2022 {:%x %X}\n'.format(datetime.now()))
-        printer.text_center('Frau Tamara (Cashier) served you at Station 1\n')
-        printer.text(ruler_single)
-        printer.set_expanded(True)
-        printer.justify_center()
-        printer.text('RECEIPT #5678')
-        printer.justify_left()
-        printer.set_expanded(False)
-        printer.text(ruler_single)
-
-
-        item_mask = _build_item_mask(
-                printer.feature.columns.condensed,
-                alignments='><>^>>',
-                column_widths=[
-                    0.05,
-                    0.2,
-                    0.1,
-                    0.05,
-                    0.15,
-                    0.15,
-                ]
-            )
-
-        data = (
-                ('No.', 'Product', 'Qty', '', 'Price', 'Total'),
-                ('1', 'SAMPLE', '2', 'x', '0.25', '0.50'),
-                ('2', 'OTHER SAMPLE', '1', 'x', '1.50', '1.50'),
-                ('3', 'ANOTHER ONE', '3', 'x', '0.75', '2.25'),
-            )
-
-        printer.set_condensed(True)
-        for row in data:
-            printer.text(item_mask.format(*row))
-
-        printer.set_condensed(False)
-        printer.text(ruler_single)
-        printer.set_emphasized(True)
-        printer.text('TOTAL  4.25')
-        printer.set_emphasized(False)
-        printer.text(ruler_single)
-        printer.lf() 
-        
-        # # Init the printer
         # printer.init()
-        
-        # # Set Header of the receipt
-        # printer.text_center('\n***** das POS-Unternehmen *****\n\n')
-        # printer.text_center('Beleg-Nr. 10052/013/0001   31.08.2022 11:33:37\n')
+        # printer.text('\n***** das POS-Unternehmen *****\n')
+        # printer.text_center('Beleg-Nr. 10052/013/0001   31.08.2022 {:%x %X}\n'.format(datetime.now()))
         # printer.text_center('Frau Tamara (Cashier) served you at Station 1\n')
+        # printer.text(ruler_single)
+        # printer.set_expanded(True)
+        # printer.justify_center()
+        # printer.text('RECEIPT #5678')
+        # printer.justify_left()
+        # printer.set_expanded(False)
+        # printer.text(ruler_single)
+
+
+        # item_mask = _build_item_mask(
+        #         printer.feature.columns.condensed,
+        #         alignments='><>^>>',
+        #         column_widths=[
+        #             0.05,
+        #             0.2,
+        #             0.1,
+        #             0.05,
+        #             0.15,
+        #             0.15,
+        #         ]
+        #     )
+
+        # data = (
+        #         ('No.', 'Product', 'Qty', '', 'Price', 'Total'),
+        #         ('1', 'SAMPLE', '2', 'x', '0.25', '0.50'),
+        #         ('2', 'OTHER SAMPLE', '1', 'x', '1.50', '1.50'),
+        #         ('3', 'ANOTHER ONE', '3', 'x', '0.75', '2.25'),
+        #     )
+
+        # printer.set_condensed(True)
+        # for row in data:
+        #     printer.text(item_mask.format(*row))
+
+        # printer.set_condensed(False)
+        # printer.text(ruler_single)
+        # printer.set_emphasized(True)
+        # printer.text('TOTAL  4.25')
+        # printer.set_emphasized(False)
+        # printer.text(ruler_single)
+        # printer.lf() 
         
-        # # Set the items sections
-        # for index, item in enumerate(receipt_data['items'], start=1):
-        #     number = str(index)
-        #     name = item['name']
-        #     product_id = item['product_id']
-        #     quantity = item['quantity']
-        #     price = f"{item['price']:.2f}"
-        #     total = f"{item['price'] * item['quantity']:.2f}"
+        # # # Init the printer
+        # # printer.init()
+        
+        # # # Set Header of the receipt
+        # # printer.text_center('\n***** das POS-Unternehmen *****\n\n')
+        # # printer.text_center('Beleg-Nr. 10052/013/0001   31.08.2022 11:33:37\n')
+        # # printer.text_center('Frau Tamara (Cashier) served you at Station 1\n')
+        
+        # # # Set the items sections
+        # # for index, item in enumerate(receipt_data['items'], start=1):
+        # #     number = str(index)
+        # #     name = item['name']
+        # #     product_id = item['product_id']
+        # #     quantity = item['quantity']
+        # #     price = f"{item['price']:.2f}"
+        # #     total = f"{item['price'] * item['quantity']:.2f}"
             
-        #     printer.text(f"{number} {name}\n {product_id} {quantity} {price} {total}")
+        # #     printer.text(f"{number} {name}\n {product_id} {quantity} {price} {total}")
         
-        # # Set Footer of the receipt
-        # printer.text('\n')
-        # printer.ean13("1234567891011")
-        # printer.text('\n\n\n***** Thank you for your purchase *****\n')
-        # printer.text('www.aks-anker.de/')    
+        # # # Set Footer of the receipt
+        # # printer.text('\n')
+        # # printer.ean13("1234567891011")
+        # # printer.text('\n\n\n***** Thank you for your purchase *****\n')
+        # # printer.text('www.aks-anker.de/')    
         
-        # printer.kick_drawer(port=0)
+        # # printer.kick_drawer(port=0)
         
-        # Cut the paper
-        printer.cut()
+        # # Cut the paper
+        # printer.cut()
 
         return jsonify({
             'message': 'Receipt printed and cash drawer kicked successfully!',
