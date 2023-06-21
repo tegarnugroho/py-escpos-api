@@ -11,6 +11,11 @@ app_routes = Blueprint('printer', __name__)
 def _get_ruler(printer, char='-'):
     return char * printer.feature.columns.normal
 
+def space(length_space):
+    # Create a string of spaces with a specified length
+    line = ' ' * length_space
+    return line
+
 def _build_item_mask(width, alignments=None, column_widths=None, gap=1):
     # <alignments> str, for example "<>^" (left, right, center)
     # <column_widths> list(float, ...)
@@ -43,33 +48,25 @@ def print_receipt():
             
         ruler_single = _get_ruler(printer)
 
-        printer.init()
-        printer.text('\n***** das POS-Unternehmen *****\n')
-        printer.text_center('Beleg-Nr. 10052/013/0001   31.08.2022 {:%x %X}\n'.format(datetime.now()))
-        printer.text_center('Frau Tamara (Cashier) served you at Station 1\n')
-        printer.text(ruler_single)
-        printer.set_expanded(True)
-        printer.justify_center()
-        printer.text('RECEIPT #5678')
-        printer.justify_left()
-        printer.set_expanded(False)
-        printer.text(ruler_single)
-
-
-        item_mask = _build_item_mask(
-                printer.feature.columns.condensed,
-                alignments='><>^>>',
-                column_widths=[
-                    0.05,
-                    0.2,
-                    0.1,
-                    0.05,
-                    0.15,
-                    0.15,
-                ]
-            )
         
-                # Set the items sections
+        printer.set(align='center')
+        # Set the print width to 80mm (ESC/POS command)
+        printer.device.write(b'\x1B\x57\x40\x50')
+
+        # Print receipt content
+        printer.set(align='center')
+        printer.writeText('\n***** das POS-Unternehmen *****\n\n')
+        
+        printer.writeText('Beleg-Nr. 10052/013/0001   31.08.2022 11:33:37\n')
+        printer.set(align='left')
+        printer.writeText('Frau Tamara (Cashier) served you at Station 1\n')
+        printer.set(align='center')
+        printer.text(ruler_single)
+        
+        # Define the column titles
+        column_titles = ["Art-Nr", "Anz", "E-Preis", "Betrag"]
+
+        # Set the items sections
         for index, item in enumerate(receipt_data['items'], start=1):
             number = str(index)
             name = item['name']
@@ -78,34 +75,65 @@ def print_receipt():
             price = f"{item['price']:.2f}"
             total = f"{item['price'] * item['quantity']:.2f}"
 
-        data = (
-                ('No.', 'Product', 'Qty', '', 'Price', 'Total'),
-                (f'{number}', 'SAMPLE', '2', 'x', '0.25', '0.50'),
-                ('2', 'OTHER SAMPLE', '1', 'x', '1.50', '1.50'),
-                ('3', 'ANOTHER ONE', '3', 'x', '0.75', '2.25'),
-            )
+            # Calculate the space counts
+            number_space_count = len(number)
+            name_space_count = 44 - len(name)  # Adjust the space count as needed
+            product_id_space_count = 18 - len(product_id)
+            
+            title_line = f"{space(3)}{column_titles[0]}{space(product_id_space_count + 4)}" \
+                   f"{column_titles[1]}{space(3)}" \
+                   f"{column_titles[2]}{space(3)}" \
+                   f"{column_titles[3]}{space(3)}"
 
-        printer.set_condensed(True)
-        for row in data:
-            printer.text(item_mask.format(*row))
+            if index == 1:
+                printer.writeText(title_line + '\n')
+                printer.writeText(ruler_single)
 
-        printer.set_condensed(False)
-        printer.text(ruler_single)
-        printer.set_emphasized(True)
-        printer.text('TOTAL  4.25')
-        printer.set_emphasized(False)
-        printer.text(ruler_single)
-        printer.lf()
+            name_line = f"{name}{space(name_space_count)}"
+            qty_line = f"{quantity}{space(4)}"
+            price_line = f"{price}{space(4)}"
+            total_line = f"{total}"
+            line = f"{number}{space(number_space_count)}" \
+                   f"{name_line}"
+
+            printer.writeText(line + '\n')
+            printer.set(align='left')
+            printer.writeText(f"{space(3)}{product_id}{space(product_id_space_count + 3)}{qty_line}{price_line}{total_line}\n")  # Print the product ID, quantity, price, and total below the name
+            printer.set(align='center')
+            
+        # Accumulate the total amount 
+        total_amount = sum(item['price'] * item['quantity'] for item in receipt_data['items'])
+        total_amount = round(total_amount, 2)
         
-        # Set Footer of the receipt
-        printer.text('\n')
-        printer.barcode("123456", "CODE39", pos='OFF', width=2, height=100) 
-        printer.text_center('\n\n\n***** Thank you for your purchase *****\n')
-        printer.text_center('www.aks-anker.de/')  
+        # Set total amount section
+        printer.text(ruler_single)
+        printer.set(text_type='B', font='A', width=2, height=2)  # Set larger size and bold format
+        spaces_before_total = max(0, 24 - len(f"Gesamtbetrag {total_amount}"))  # Calculate the remaining spaces
+        printer.writeText(f"Gesamtbetrag {space(spaces_before_total)}{total_amount}\n")
+        printer.set(text_type='NORMAL', font='A', width=1, height=1) 
+        printer.text(ruler_single)
         
+        # Set the tax, net section
+        task_rate = 19  # Task rate in percentage
+        net_price = total_amount / (1 + (task_rate / 100))  # Calculate the net price
+        task_amount = total_amount - net_price  # Calculate the task amount
+        task_line = f"{space(10)}{task_rate:.1f}%: {task_amount:.2f}\n"
+        net_price_line = f'Netto-Warenwert: {net_price:.2f}\n'
+        printer.writeText(task_line)
+        printer.writeText(net_price_line)
+        printer.writeText(ruler_single)
+        
+        # Footer of the receipt
+        printer.writeText('\n')
+        printer.barcode("123456", "CODE39", pos='OFF', width=2, height=100)  # Generate the barcode without a number
+        printer.writeText('\n\n\n***** Thank you for your purchase *****\n')
+        printer.writeText('www.aks-anker.de/')
+
         # Cut the paper
         printer.cut()
-        
+
+        # Close the printer connection
+        printer.close()
 
         return jsonify({
             'message': 'Receipt printed and cash drawer kicked successfully!',
