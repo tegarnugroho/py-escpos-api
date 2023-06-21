@@ -99,16 +99,13 @@ def print_receipt():
         
         # Set Footer of the receipt
         printer.text('\n')
-        printer.ean13("1234567891011")
-        printer.text('\n\n\n***** Thank you for your purchase *****\n')
-        printer.text('www.aks-anker.de/')  
+        printer.ean13("1234567891011", barcode_height=100, barcode_width=200)
+        printer.text_center('\n\n\n***** Thank you for your purchase *****\n')
+        printer.text_center('www.aks-anker.de/')  
         
         # Cut the paper
         printer.cut()
         
-
-        # Close the printer connection
-        printer.close()
         
 
         return jsonify({
