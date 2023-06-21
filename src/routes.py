@@ -99,12 +99,7 @@ def print_receipt():
         
         # Set Footer of the receipt
         printer.text('\n')
-        getattr(printer, 'ean13')(
-                '1234567891011',
-                barcode_hri= barcode.BARCODE_HRI_NONE,
-                barcode_height= 50,
-                barcode_width=barcode.BARCODE_NORMAL_WIDTH
-            )
+        printer.barcode("123456", "CODE39", pos='OFF', width=2, height=100) 
         printer.text_center('\n\n\n***** Thank you for your purchase *****\n')
         printer.text_center('www.aks-anker.de/')  
         
